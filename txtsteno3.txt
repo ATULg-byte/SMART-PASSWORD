@@ -1,0 +1,134 @@
+import java.io.*;
+import java.nio.file.*;
+import java.util.Base64;
+import java.util.Scanner;
+
+public class TextSteganography {
+
+    private static final String START_TAG = "<START_SECRET>";
+    private static final String END_TAG = "<END_SECRET>";
+
+    // Encode Secret Message
+    public static void hideMessage(String coverFile,
+                                   String outputFile,
+                                   String secretMessage)
+            throws IOException {
+
+        String coverText =
+                new String(Files.readAllBytes(Paths.get(coverFile)));
+
+        String encodedSecret =
+                Base64.getEncoder()
+                        .encodeToString(secretMessage.getBytes());
+
+        String stegoText =
+                coverText +
+                "\n" + START_TAG +
+                "\n" + encodedSecret +
+                "\n" + END_TAG;
+
+        Files.write(Paths.get(outputFile),
+                stegoText.getBytes());
+
+        System.out.println("Message Hidden Successfully!");
+    }
+
+    // Decode Secret Message
+    public static String retrieveMessage(String encodedFile)
+            throws IOException {
+
+        String content =
+                new String(Files.readAllBytes(
+                        Paths.get(encodedFile)));
+
+        int start =
+                content.indexOf(START_TAG);
+
+        int end =
+                content.indexOf(END_TAG);
+
+        if(start == -1 || end == -1)
+            return "No Hidden Message Found.";
+
+        String encodedMessage =
+                content.substring(
+                        start + START_TAG.length(),
+                        end).trim();
+
+        byte[] decodedBytes =
+                Base64.getDecoder()
+                        .decode(encodedMessage);
+
+        return new String(decodedBytes);
+    }
+
+    public static void main(String[] args)
+            throws IOException {
+
+        Scanner sc = new Scanner(System.in);
+
+        while(true) {
+
+            System.out.println("\n===== TEXT STEGANOGRAPHY =====");
+            System.out.println("1. Hide Message");
+            System.out.println("2. Retrieve Message");
+            System.out.println("3. Exit");
+
+            System.out.print("Enter Choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            switch(choice) {
+
+                case 1:
+
+                    System.out.print(
+                            "Enter Cover File Name: ");
+                    String coverFile = sc.nextLine();
+
+                    System.out.print(
+                            "Enter Output File Name: ");
+                    String outputFile = sc.nextLine();
+
+                    System.out.print(
+                            "Enter Secret Message: ");
+                    String secret =
+                            sc.nextLine();
+
+                    hideMessage(
+                            coverFile,
+                            outputFile,
+                            secret);
+
+                    break;
+
+                case 2:
+
+                    System.out.print(
+                            "Enter Encoded File Name: ");
+
+                    String encodedFile =
+                            sc.nextLine();
+
+                    String message =
+                            retrieveMessage(
+                                    encodedFile);
+
+                    System.out.println(
+                            "Hidden Message: "
+                                    + message);
+
+                    break;
+
+                case 3:
+                    System.out.println(
+                            "Program Closed.");
+                    System.exit(0);
+
+                default:
+                    System.out.println(
+                            "Invalid Choice!");
+            }
+        }
+    }
+}
